@@ -1,7 +1,7 @@
 {
   "name": "module-walker",
-  "version": "1.0.0",
-  "description": "module-walker",
+  "version": "0.0.0",
+  "description": "JavaScript module traverser",
   "main": "./lib",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec ./test/*.js"
@@ -11,7 +11,15 @@
     "url": "git://github.com/kaelzhang/module-walker.git"
   },
   "keywords": [
-    "module-walker"
+    "module-walker",
+    "commonjs",
+    "es6",
+    "module",
+    "walker",
+    "traverser",
+    "ast",
+    "import",
+    "export"
   ],
   "engines": {
     "node": ">=0.10.0"
