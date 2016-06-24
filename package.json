@@ -2,9 +2,9 @@
   "name": "module-walker",
   "version": "0.0.0",
   "description": "JavaScript module traverser",
-  "main": "./lib",
+  "main": "./src",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec ./test/*.js"
+    "test": "./node_modules/.bin/mocha --reporter spec ./test/parser.js"
   },
   "repository": {
     "type": "git",
@@ -32,5 +32,10 @@
   "devDependencies": {
     "chai": "~1.7.2",
     "mocha": "~1.13.0"
+  },
+  "dependencies": {
+    "array-unique": "^0.2.1",
+    "babylon": "^6.8.1",
+    "set-options": "^1.0.4"
   }
 }
