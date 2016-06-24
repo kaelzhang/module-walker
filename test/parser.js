@@ -46,6 +46,12 @@ const cases = [
     options: {
     },
     deps: ['../abc', './abc']
+  },
+  {
+    desc: 'es6 import',
+    file: 'import.js',
+    options : {},
+    deps: 'a b c d e f g h i'.split(' ')
   }
 ]
 

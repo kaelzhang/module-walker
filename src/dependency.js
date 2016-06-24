@@ -65,7 +65,7 @@ parser._parseDependenciesFromAST = (ast, options, callback) => {
 
 
 // Parses AST and returns the dependencies
-parser._parseDependencies = function (node, dependencies, options) {
+parser._parseDependencies = (node, dependencies, options) => {
   // Only arrays or objects has child node, or is a sub AST.
   if (!node || Object(node) !== node) {
     return
@@ -98,6 +98,8 @@ parser._parseDependencies = function (node, dependencies, options) {
         && node.callee.property.name === 'async'
     }, dependencies.async, options, false)
 
+  || parser._checkES6Imported(node, require)
+
   if (util.isArray(node)) {
     node.forEach((sub) => {
       parser._parseDependencies(sub, dependencies, options)
@@ -113,8 +115,23 @@ parser._parseDependencies = function (node, dependencies, options) {
 }
 
 
+parser._checkES6Imported = (node, dependencies) => {
+  if (node.type !== 'ImportDeclaration') {
+    return
+  }
+
+  dependencies.push(node.source.value)
+}
+
+
 // @returns {Boolean} whether a dependency is found
-parser._checkCommonJSDependencyNode = function (node, condition, deps_array, options, check_if_length_exceeded) {
+parser._checkCommonJSDependencyNode = (
+  node,
+  condition,
+  deps_array,
+  options,
+  check_if_length_exceeded
+) => {
   if (!condition(node)) {
     return
   }
@@ -159,13 +176,13 @@ let REGEX_REQUIRE_ASYNC =
   new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
 
 // Parses `@require`, `@require.resolve`, `@require.async` in comments
-parser._parse_comments = function (ast, dependencies, options) {
+parser._parse_comments = (ast, dependencies, options) => {
   let comments = ast.comments
   if (!comments) {
     return
   }
 
-  comments.forEach(function (comment) {
+  comments.forEach(comment => {
     parser._parse_by_regex(comment.value, REGEX_REQUIRE, dependencies.normal)
 
     if (options.requireResolve) {
@@ -182,7 +199,7 @@ parser._parse_comments = function (ast, dependencies, options) {
 // @param {string} content
 // @param {RegExp} regex
 // @param {*Array} matches
-parser._parse_by_regex = function (content, regex, matches) {
+parser._parse_by_regex = (content, regex, matches) => {
   let match
   while(match = regex.exec(content)){
     matches.push(match[2])
