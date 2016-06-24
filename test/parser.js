@@ -12,7 +12,7 @@ const cases = [
     desc: 'could get dependencies',
     file: 'correct.js',
     options: {
-      check_require_length: true
+      checkRequireLength: true
     },
     deps: ['../abc', 'abc', './abc']
   },
@@ -20,7 +20,7 @@ const cases = [
     desc: 'no arguments, strict',
     file: 'no-arg.js',
     options: {
-      check_require_length: true
+      checkRequireLength: true
     },
     error: true
   },
@@ -35,7 +35,7 @@ const cases = [
     desc: 'more than one arguments, strict',
     file: 'more-than-one-arg.js',
     options: {
-      check_require_length: true
+      checkRequireLength: true
     },
     error: true
 
@@ -46,37 +46,40 @@ const cases = [
     options: {
     },
     deps: ['../abc', './abc']
-  },
-  {
-    desc: 'parsing a json file will fail',
-    file: 'json.json',
-    error: true
   }
 ]
 
 describe("parser.parseDependenciesFromAST()", function(){
   cases.forEach(function (c) {
-    it(c.desc, function(done) {
+    let _it = c.only
+      ? it.only
+      : it
+
+    _it(c.desc, function(done) {
       let file = node_path.join(__dirname, 'fixtures', 'parser', c.file)
       let content = fs.readFileSync(file).toString()
       let ast = utils.astFromSource(content)
-      dependency.parseDependenciesFromAST(ast, c.options || {})
-      .catch(() => {
-        if (!c.error) {
-          expect('error').to.equal('success')
-        }
-        done()
-      })
-      .then((result) => {
-        done()
-        if (c.error) {
-          expect('success').to.equal('error')
-        }
 
-        if (util.isArray(c.deps)) {
-          expect(result.require.sort()).to.deep.equal(c.deps.sort())
+      dependency.parseDependenciesFromAST(ast, c.options || {})
+      .catch()
+      .then(
+        (result) => {
+          done()
+          if (c.error) {
+            expect('success').to.equal('error')
+          }
+
+          if (util.isArray(c.deps)) {
+            expect(result.require.sort()).to.deep.equal(c.deps.sort())
+          }
+        },
+        (e) => {
+          done()
+          if (!c.error) {
+            expect('error').to.equal('success')
+          }
         }
-      })
+      )
     })
   })
 })
