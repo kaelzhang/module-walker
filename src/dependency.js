@@ -163,16 +163,16 @@ parser._checkCommonJSDependencyNode = (
 }
 
 
-let REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
-let REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
+const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
+const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
 
-let REGEX_REQUIRE         =
+const REGEX_REQUIRE =
   new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
 
-let REGEX_REQUIRE_RESOLVE =
+const REGEX_REQUIRE_RESOLVE =
   new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
 
-let REGEX_REQUIRE_ASYNC =
+const REGEX_REQUIRE_ASYNC =
   new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
 
 // Parses `@require`, `@require.resolve`, `@require.async` in comments
