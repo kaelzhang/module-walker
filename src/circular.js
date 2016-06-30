@@ -16,7 +16,7 @@ var circular = exports
 // @returns
 // - null if no circle
 // - `Array` if has a circle
-circular.trace = function (from, to, nodes) {
+circular.trace = (from, to, nodes) => {
   var trace = [to]
 
   if (from === to) {
@@ -27,7 +27,7 @@ circular.trace = function (from, to, nodes) {
 }
 
 
-circular.lookBack = function (from, to, trace, nodes) {
+circular.lookBack = (from, to, trace, nodes) => {
   trace.push(from)
 
   if (from === to) {
@@ -45,7 +45,7 @@ circular.lookBack = function (from, to, trace, nodes) {
     return null
   }
 
-  var found = deps_array.some(function (dep) {
+  var found = deps_array.some(dep => {
     var dep_path = dependencies[dep]
     var new_from = nodes[dep_path]
     return circular.lookBack(new_from, to, trace, nodes)
