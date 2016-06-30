@@ -25,7 +25,12 @@ $ npm install module-walker --save
 ## Usage
 
 ```js
-var module_walker = require('module-walker');
+const walker = require('module-walker')
+
+walker(options)
+  .walk()
+  .walk()
+  .then(resolve, reject)
 ```
 
 ## License

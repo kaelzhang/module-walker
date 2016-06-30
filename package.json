@@ -36,6 +36,7 @@
   "dependencies": {
     "array-unique": "^0.2.1",
     "babylon": "^6.8.1",
+    "make-array": "^1.0.1",
     "set-options": "^1.0.4"
   }
 }
