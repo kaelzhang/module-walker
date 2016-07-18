@@ -25,6 +25,8 @@ const EXTS_NODE = ['.js', '.json', '.node']
 const DEFAULT_WALKER_OPTIONS = {
   concurrency: 10,
   extensions: EXTS_NODE,
+  allowCyclic: true,
+  allowAbsoluteDependency: true
   // pathFilter
   // paths:
   // moduleDirectory: 'node_modules'
@@ -160,8 +162,6 @@ module.exports = class Walker extends EventEmitter {
 
   // Applies all compilers to process the file content
   _compile (filename, content, callback) {
-console.log('this.compilers', this.compilers)
-
     let tasks = this.compilers.filter(c => {
       return c.test.test(filename)
 
@@ -193,6 +193,7 @@ console.log('this.compilers', this.compilers)
   _parse_dependencies_by_type (path, paths, type, callback) {
     var options = this.options
     var node = this._get_node(path)
+
     async.each(paths, (dep, done) => {
       var origin = dep
 
@@ -206,17 +207,17 @@ console.log('this.compilers', this.compilers)
           }
         }
 
-        if (!options.allow_absolute_path) {
-          return done()
+        if (!options.allowAbsoluteDependency) {
+          return done(message)
         } else {
           this.emit('warn', message)
         }
       }
 
-      if (!this._is_relative_path(dep)) {
-        // we only map top level id for now
-        dep = this._solve_aliased_dependency(options['as'][dep], path) || dep
-      }
+      // if (!this._is_relative_path(dep)) {
+      //   // we only map top level id for now
+      //   dep = this._solve_aliased_dependency(options['as'][dep], path) || dep
+      // }
 
       // package name, not a path
       if (!this._is_relative_path(dep)) {
@@ -228,7 +229,7 @@ console.log('this.compilers', this.compilers)
         extensions: options.extensions
       }
 
-      [
+      ;[
         'pathFilter',
         'paths',
         'moduleDirectory'
@@ -256,35 +257,35 @@ console.log('this.compilers', this.compilers)
     }, callback)
   }
 
-  // #17
-  // If we define an `as` field in cortex.json
-  // {
-  //   "as": {
-  //     "abc": './abc.js' // ./abc.js is relative to the root directory
+  // // #17
+  // // If we define an `as` field in cortex.json
+  // // {
+  // //   "as": {
+  // //     "abc": './abc.js' // ./abc.js is relative to the root directory
+  // //   }
+  // // }
+  // // @param {String} dep path of dependency
+  // // @param {String} env_path the path of the current file
+  // _solve_aliased_dependency (dep, env_path) {
+  //   var cwd = this.options.cwd
+
+  //   if (!dep || !cwd || !this._is_relative_path(dep)) {
+  //     return dep
   //   }
+
+  //   dep = node_path.join(cwd, dep)
+  //   dep = node_path.relative(node_path.dirname(env_path), dep)
+  //     // After join and relative, dep will contains `node_path.sep` which varies from operating system,
+  //     // so normalize it
+  //     .replace(/\\/g, '/')
+
+  //   if (!~dep.indexOf('..')) {
+  //     // 'abc.js' -> './abc.js'
+  //     dep = './' + dep
+  //   }
+
+  //   return dep
   // }
-  // @param {String} dep path of dependency
-  // @param {String} env_path the path of the current file
-  _solve_aliased_dependency (dep, env_path) {
-    var cwd = this.options.cwd
-
-    if (!dep || !cwd || !this._is_relative_path(dep)) {
-      return dep
-    }
-
-    dep = node_path.join(cwd, dep)
-    dep = node_path.relative(node_path.dirname(env_path), dep)
-      // After join and relative, dep will contains `node_path.sep` which varies from operating system,
-      // so normalize it
-      .replace(/\\/g, '/')
-
-    if (!~dep.indexOf('..')) {
-      // 'abc.js' -> './abc.js'
-      dep = './' + dep
-    }
-
-    return dep
-  }
 
   _deal_dependency (dep, real, node, type, callback) {
     node[type][dep] = real
@@ -313,7 +314,7 @@ console.log('this.compilers', this.compilers)
         }
       }
 
-      if (!this.options.allow_cyclic) {
+      if (!this.options.allowCyclic) {
         return callback(message)
       } else {
         this.emit('warn', message)

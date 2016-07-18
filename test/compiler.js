@@ -41,8 +41,12 @@ cases.forEach(function (c) {
     let file = filename(c.file)
 
     let callback = function (err, nodes) {
-      console.log('done')
       t.end()
+
+      if (err) {
+        t.fail()
+        return
+      }
 
       let entry
       if (!err && nodes) {
