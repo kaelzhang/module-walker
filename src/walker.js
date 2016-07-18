@@ -4,7 +4,7 @@
 module.exports = Walker
 
 const { parseDependenciesFromAST } = require('./dependency')
-const { traceCircular } = require('./circular')
+const traceCircular = require('./circular')
 const {
   matchExt,
   astFromSource

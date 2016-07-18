@@ -4,7 +4,7 @@
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec ./test/parser.js"
+    "test": "./node_modules/.bin/mocha --reporter spec ./test/*.js"
   },
   "repository": {
     "type": "git",

@@ -1,7 +1,5 @@
 'use strict'
 
-var circular = exports
-
 // Scenario:
 // One day, `to` depends on `from`,
 // So we suppose that there is a trace goes back the dependency chain
@@ -16,18 +14,18 @@ var circular = exports
 // @returns
 // - null if no circle
 // - `Array` if has a circle
-circular.trace = (from, to, nodes) => {
+module.exports = (from, to, nodes) => {
   var trace = [to]
 
   if (from === to) {
     return null
   }
 
-  return circular.lookBack(from, to, trace, nodes)
+  return _lookBack(from, to, trace, nodes)
 }
 
 
-circular.lookBack = (from, to, trace, nodes) => {
+function _lookBack (from, to, trace, nodes) {
   trace.push(from)
 
   if (from === to) {
@@ -48,7 +46,7 @@ circular.lookBack = (from, to, trace, nodes) => {
   var found = deps_array.some(dep => {
     var dep_path = dependencies[dep]
     var new_from = nodes[dep_path]
-    return circular.lookBack(new_from, to, trace, nodes)
+    return _lookBack(new_from, to, trace, nodes)
   })
 
   if (!found) {
