@@ -61,9 +61,9 @@ parser._parseDependenciesFromAST = (ast, options, callback) => {
     })
   }
 
-  if (options.commentRequire) {
-    parser._parse_comments(ast, dependencies, options)
-  }
+  // if (options.commentRequire) {
+  //   parser._parse_comments(ast, dependencies, options)
+  // }
 
   callback(null, {
     require: unique(dependencies.normal),
@@ -172,37 +172,37 @@ parser._checkCommonJSDependencyNode = (
 }
 
 
-const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
-const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
+// const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
+// const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
 
-const REGEX_REQUIRE =
-  new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
+// const REGEX_REQUIRE =
+//   new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
 
-const REGEX_REQUIRE_RESOLVE =
-  new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
+// const REGEX_REQUIRE_RESOLVE =
+//   new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
 
-const REGEX_REQUIRE_ASYNC =
-  new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
+// const REGEX_REQUIRE_ASYNC =
+//   new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
 
-// Parses `@require`, `@require.resolve`, `@require.async` in comments
-parser._parse_comments = (ast, dependencies, options) => {
-  let comments = ast.comments
-  if (!comments) {
-    return
-  }
+// // Parses `@require`, `@require.resolve`, `@require.async` in comments
+// parser._parse_comments = (ast, dependencies, options) => {
+//   let comments = ast.comments
+//   if (!comments) {
+//     return
+//   }
 
-  comments.forEach(comment => {
-    parser._parse_by_regex(comment.value, REGEX_REQUIRE, dependencies.normal)
+//   comments.forEach(comment => {
+//     parser._parse_by_regex(comment.value, REGEX_REQUIRE, dependencies.normal)
 
-    if (options.requireResolve) {
-      parser._parse_by_regex(comment.value, REGEX_REQUIRE_RESOLVE, dependencies.resolve)
-    }
+//     if (options.requireResolve) {
+//       parser._parse_by_regex(comment.value, REGEX_REQUIRE_RESOLVE, dependencies.resolve)
+//     }
 
-    if (options.requireAsync) {
-      parser._parse_by_regex(comment.value, REGEX_REQUIRE_ASYNC, dependencies.async)
-    }
-  })
-}
+//     if (options.requireAsync) {
+//       parser._parse_by_regex(comment.value, REGEX_REQUIRE_ASYNC, dependencies.async)
+//     }
+//   })
+// }
 
 
 // @param {string} content

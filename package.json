@@ -1,6 +1,6 @@
 {
   "name": "module-walker",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
@@ -49,6 +49,6 @@
     "make-unique": "^1.0.4",
     "mix2": "^1.0.1",
     "resolve": "^1.1.7",
-    "set-options": "^1.0.4"
+    "set-options": "^2.0.0"
   }
 }

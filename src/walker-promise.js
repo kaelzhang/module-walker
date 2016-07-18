@@ -12,10 +12,8 @@ const Walker = require('./walker')
 module.exports = class WalkerWrapper extends EventEmitter {
   constructor (options) {
     super()
-
     this.options = options
     this.entries = []
-
     this.options.compilers = make_array(this.options.compilers)
   }
 
