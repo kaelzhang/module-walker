@@ -33,21 +33,3 @@ exports.matchExt = function (path, ext) {
     // if there is no extension
     : true
 }
-
-
-// exports.simple_clone = function (object) {
-//   let key
-//   let obj = {}
-//   for (key in object) {
-//     obj[key] = exports._shadow_clone(object[key])
-//   }
-
-//   return obj
-// }
-
-
-// exports._shadow_clone = function (object) {
-//   function F () {}
-//   F.prototype = object
-//   return new F
-// }

@@ -3,7 +3,7 @@
 let parser = exports
 const node_path = require('path')
 const util = require('util')
-const unique = require('array-unique')
+const unique = require('make-unique')
 const utils = require('./utils')
 
 
@@ -55,8 +55,6 @@ parser._parseDependenciesFromAST = (ast, options, callback) => {
   }
 
   callback(null, {
-    // code: content,
-    path: path,
     require: unique(dependencies.normal),
     resolve: unique(dependencies.resolve),
     async: unique(dependencies.async)
@@ -98,7 +96,7 @@ parser._parseDependencies = (node, dependencies, options) => {
         && node.callee.property.name === 'async'
     }, dependencies.async, options, false)
 
-  || parser._checkES6Imported(node, require)
+  || parser._checkES6Imported(node, dependencies.normal)
 
   if (util.isArray(node)) {
     node.forEach((sub) => {
@@ -154,7 +152,7 @@ parser._checkCommonJSDependencyNode = (
     return
   }
 
-  if (arg1.type !== 'Literal') {
+  if (arg1.type !== 'StringLiteral') {
     utils.throw(!options.allowNonLiteralRequire, generate_loc_text(arg1.loc.start) + 'Method `require` only accepts a string literal.' )
   } else {
     deps_array.push(arg1.value)

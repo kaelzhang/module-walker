@@ -7,6 +7,8 @@ const util = require('util')
 const utils = require('../src/utils')
 const fs = require('fs')
 
+const test = require('ava')
+
 const cases = [
   {
     desc: 'could get dependencies',
@@ -38,7 +40,6 @@ const cases = [
       checkRequireLength: true
     },
     error: true
-
   },
   {
     desc: 'more than one arguments, no strict',
@@ -55,37 +56,35 @@ const cases = [
   }
 ]
 
-describe("parser.parseDependenciesFromAST()", function(){
-  cases.forEach(function (c) {
-    let _it = c.only
-      ? it.only
-      : it
+cases.forEach(function (c) {
+  let _it = c.only
+    ? test.only.cb
+    : test.cb
 
-    _it(c.desc, function(done) {
-      let file = node_path.join(__dirname, 'fixtures', 'parser', c.file)
-      let content = fs.readFileSync(file).toString()
-      let ast = utils.astFromSource(content)
+  _it(c.desc, t => {
+    let file = node_path.join(__dirname, 'fixtures', 'parser', c.file)
+    let content = fs.readFileSync(file).toString()
+    let ast = utils.astFromSource(content)
 
-      dependency.parseDependenciesFromAST(ast, c.options || {})
-      .catch()
-      .then(
-        (result) => {
-          done()
-          if (c.error) {
-            expect('success').to.equal('error')
-          }
+    dependency.parseDependenciesFromAST(ast, c.options || {})
+    .then(
+      (result) => {
+        t.end()
 
-          if (util.isArray(c.deps)) {
-            expect(result.require.sort()).to.deep.equal(c.deps.sort())
-          }
-        },
-        (e) => {
-          done()
-          if (!c.error) {
-            expect('error').to.equal('success')
-          }
+        if (c.error) {
+          t.fail()
         }
-      )
-    })
+
+        if (util.isArray(c.deps)) {
+          t.deepEqual(result.require.sort(), c.deps.sort())
+        }
+      },
+      (e) => {
+        t.end()
+        if (!c.error) {
+          t.fail()
+        }
+      }
+    )
   })
 })

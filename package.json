@@ -4,7 +4,7 @@
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec ./test/*.js"
+    "test": "ava"
   },
   "repository": {
     "type": "git",
@@ -29,14 +29,19 @@
   "bugs": {
     "url": "https://github.com/kaelzhang/module-walker/issues"
   },
+  "ava": {
+    "files": [
+      "test/circular.js",
+      "test/parser.js"
+    ]
+  },
   "devDependencies": {
-    "chai": "~1.7.2",
-    "mocha": "~1.13.0"
+    "ava": "^0.15.2"
   },
   "dependencies": {
     "array-unique": "^0.2.1",
     "babylon": "^6.8.1",
-    "make-array": "^1.0.1",
+    "make-unique": "^1.0.4",
     "set-options": "^1.0.4"
   }
 }

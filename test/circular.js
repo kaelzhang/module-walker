@@ -1,85 +1,82 @@
 'use strict'
 
-var expect = require('chai').expect
-var traceCircular = require('../src/circular')
+const traceCircular = require('../src/circular')
+const test = require('ava')
 
+test("should not fuck himself", t => {
+  let a = {}
+  let nodes = {
+    '/a': a
+  }
 
-describe("traceCircular()", function(){
-  it("should not fuck himself", function(){
-    var a = {}
-    var nodes = {
-      '/a': a
+  let result = traceCircular(a, a, nodes)
+  t.is(result, null)
+})
+
+test("no match", t => {
+  let a = {}
+  let b = {}
+  let nodes = {
+    '/a': a,
+    '/b': b
+  }
+
+  let result = traceCircular(a, b, nodes)
+  t.is(result, null)
+})
+
+test("a longer link, but no match", t => {
+  let a = {}
+  let b = {
+    require: {
+      './c': '/c'
     }
+  }
+  let nodes = {
+    '/a': a,
+    '/b': b,
+    '/c': {
+      require: {}
+    }
+  }
 
-    var result = traceCircular(a, a, nodes)
-    expect(result).to.equal(null)
+  let result = traceCircular(a, b, nodes)
+  t.is(result, null)
+})
+
+test("matches", t => {
+  let a = {
+    name: 'a'
+  }
+  let b = {
+    name: 'b',
+    require: {
+      './c': '/c',
+      './e': '/e'
+    }
+  }
+  let c = {
+    name: 'c',
+    require: {
+      './d': '/d',
+      './a': '/a'
+    }
+  }
+
+  let nodes = {
+    '/a': a,
+    '/b': b,
+    '/c': c,
+    '/d': {
+      name: 'd'
+    },
+    '/e': {
+      name: 'e'
+    }
+  }
+
+  let result = traceCircular(b, a, nodes).map(function (item) {
+    return item.name
   })
-
-  it("no match", function(){
-    var a = {}
-    var b = {}
-    var nodes = {
-      '/a': a,
-      '/b': b
-    }
-
-    var result = traceCircular(a, b, nodes)
-    expect(result).to.equal(null)
-  })
-
-  it("a longer link, but no match", function(){
-    var a = {}
-    var b = {
-      require: {
-        './c': '/c'
-      }
-    }
-    var nodes = {
-      '/a': a,
-      '/b': b,
-      '/c': {
-        require: {}
-      }
-    }
-
-    var result = traceCircular(a, b, nodes)
-    expect(result).to.equal(null)
-  })
-
-  it("matches", function(){
-    var a = {
-      name: 'a'
-    }
-    var b = {
-      name: 'b',
-      require: {
-        './c': '/c',
-        './e': '/e'
-      }
-    }
-    var c = {
-      name: 'c',
-      require: {
-        './d': '/d',
-        './a': '/a'
-      }
-    }
-
-    var nodes = {
-      '/a': a,
-      '/b': b,
-      '/c': c,
-      '/d': {
-        name: 'd'
-      },
-      '/e': {
-        name: 'e'
-      }
-    }
-
-    var result = traceCircular(b, a, nodes).map(function (item) {
-      return item.name
-    })
-    expect(result).to.deep.equal(['a', 'b', 'c', 'a'])
-  })
+  t.deepEqual(result, ['a', 'b', 'c', 'a'])
 })
