@@ -11,16 +11,12 @@ const Walker = require('./walker')
 
 module.exports = class WalkerWrapper extends EventEmitter {
   constructor (options) {
+    super()
+
     this.options = options
     this.entries = []
 
-    this.options.compilers =
-    this.compilers =
-      make_array(this.options.compilers)
-
-    if (!this._checkExtensions()) {
-      throw new Error('Invalid value of `options.extensions`')
-    }
+    this.options.compilers = make_array(this.options.compilers)
   }
 
   walk (entry) {
@@ -34,7 +30,7 @@ module.exports = class WalkerWrapper extends EventEmitter {
         ? compiler.test
         : new RegExp(compiler.test)
 
-      this.compilers.push(compiler)
+      this.options.compilers.push(compiler)
     })
 
     return this

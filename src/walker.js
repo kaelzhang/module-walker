@@ -42,7 +42,6 @@ module.exports = class Walker extends EventEmitter {
     super()
 
     this.options = set(options, DEFAULT_WALKER_OPTIONS)
-    this.compilers = make_array(this.options.compilers)
 
     this.nodes = {}
     this.callback = callback
@@ -162,7 +161,7 @@ module.exports = class Walker extends EventEmitter {
 
   // Applies all compilers to process the file content
   _compile (filename, content, callback) {
-    let tasks = this.compilers.filter(c => {
+    let tasks = this.options.compilers.filter(c => {
       return c.test.test(filename)
 
     }).reduce((prev, c) => {
@@ -292,7 +291,7 @@ module.exports = class Walker extends EventEmitter {
 
     if (!this._has_node(real)) {
       // Only walk a module file if the node not exists.
-      this._walk(real)
+      this._walk_one(real)
       return callback(null)
     }
 

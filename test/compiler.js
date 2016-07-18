@@ -17,10 +17,10 @@ const cases = [
   {
     desc: 'files to be compiled, that contains dependency',
     file: 'jade/index.js',
-    compilers: {
+    compilers: [{
       test: /\.jade$/,
       compiler: jade_compiler
-    },
+    }],
     expect: function (err, path, nodes, entry, t) {
       t.is(err, null)
       var jade = filename('jade/a.jade')

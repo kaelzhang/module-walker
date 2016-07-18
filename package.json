@@ -4,7 +4,7 @@
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
-    "test": "ava --verbose"
+    "test": "ava --verbose --timeout=10s"
   },
   "repository": {
     "type": "git",
@@ -32,12 +32,14 @@
   "ava": {
     "files": [
       "test/circular.js",
-      "test/parser.js",
-      "test/compiler.js"
+      "test/dependency.js",
+      "test/compiler.js",
+      "test/index.js"
     ]
   },
   "devDependencies": {
     "ava": "^0.15.2",
+    "chai": "^3.5.0",
     "neuron-jade-compiler": "^1.0.6"
   },
   "dependencies": {
