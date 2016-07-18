@@ -1,6 +1,7 @@
 'use strict'
 
 const util = require('util')
+const { EventEmitter } = require('events')
 
 const set = require('set-options')
 const make_array = require('make-array')
@@ -8,17 +9,9 @@ const unique = require('array-unique')
 
 const Walker = require('./walker')
 
-// [ref](http://nodejs.org/api/modules.html#modules_file_modules)
-const EXTS_NODE = ['.js', '.json', '.node']
-const DEFAULT_WALKER_OPTIONS = {
-  concurrency: 10,
-  extensions: EXTS_NODE
-}
-
-
-class WalkerWrapper {
+module.exports = class WalkerWrapper extends EventEmitter {
   constructor (options) {
-    this.options = set(options, DEFAULT_WALKER_OPTIONS)
+    this.options = options
     this.entries = []
 
     this.options.compilers =
@@ -28,19 +21,6 @@ class WalkerWrapper {
     if (!this._checkExtensions()) {
       throw new Error('Invalid value of `options.extensions`')
     }
-  }
-
-  // Checks if the `options.extensions` is valid
-  _checkExtensions () {
-    var exts = this.options.extensions
-
-    if (!util.isArray(exts)) {
-      return false
-    }
-
-    return exts.every(function (ext, i) {
-      return ext === EXTS_NODE[i]
-    })
   }
 
   walk (entry) {
@@ -70,6 +50,8 @@ class WalkerWrapper {
         }
 
         resolve(nodes)
+      }).on('warn', (message) => {
+        this.emit('warn', message)
       })
     })
   }

@@ -1,8 +1,6 @@
 
 'use strict'
 
-module.exports = Walker
-
 const { parseDependenciesFromAST } = require('./dependency')
 const traceCircular = require('./circular')
 const {
@@ -22,11 +20,28 @@ const async = require('async')
 const set = require('set-options')
 
 
+// [ref](http://nodejs.org/api/modules.html#modules_file_modules)
+const EXTS_NODE = ['.js', '.json', '.node']
+const DEFAULT_WALKER_OPTIONS = {
+  concurrency: 10,
+  extensions: EXTS_NODE,
+  // pathFilter
+  // paths:
+  // moduleDirectory: 'node_modules'
+}
+
+
 // @param {Object} options
 // - concurrency
-class Walker extends EventEmitter {
-  constructor (entries, options = {}, callback) {
+module.exports = class Walker extends EventEmitter {
+
+  // @param {Object} options see walker-promise.js
+  constructor (entries, options, callback) {
     super()
+
+    this.options = set(options, DEFAULT_WALKER_OPTIONS)
+    this.compilers = make_array(this.options.compilers)
+
     this.nodes = {}
     this.callback = callback
 
@@ -57,7 +72,7 @@ class Walker extends EventEmitter {
   }
 
   _walk (entries) {
-    make_array(entry).forEach(entry => {
+    make_array(entries).forEach(entry => {
       entry = node_path.resolve(entry)
       this._walk_one(entry)
     })
@@ -99,20 +114,18 @@ class Walker extends EventEmitter {
         return callback(null)
       }
 
-      let
+      let ast = astFromSource(compiled.content)
 
-      parseDependenciesFromAST(
-        path,
-        compiled.content,
-        this.options,
-        (err, data) => {
-          if (err) {
-            return callback(err)
-          }
-
+      parseDependenciesFromAST(ast, this.options).then(
+        (data) => {
           async.each(['require', 'resolve', 'async'], (type, done) => {
             this._parse_dependencies_by_type(path, data[type], type, done)
           }, callback)
+        },
+
+        (err) => {
+          err.message = `${path}: $err.message`
+          callback(err)
         }
       )
     })
@@ -147,12 +160,14 @@ class Walker extends EventEmitter {
 
   // Applies all compilers to process the file content
   _compile (filename, content, callback) {
-    var tasks = this.compilers.filter(c => {
+console.log('this.compilers', this.compilers)
+
+    let tasks = this.compilers.filter(c => {
       return c.test.test(filename)
 
     }).reduce((prev, c) => {
       function task (compiled, done) {
-        var options = mix({
+        let options = mix({
           // adds `filename` to options of each compiler
           filename: filename
 
@@ -208,10 +223,23 @@ class Walker extends EventEmitter {
         return this._deal_dependency(origin, dep, node, type, done)
       }
 
-      resolve(dep, {
+      let resolveOptions = {
         basedir: node_path.dirname(path),
         extensions: options.extensions
-      }, (err, real) => {
+      }
+
+      [
+        'pathFilter',
+        'paths',
+        'moduleDirectory'
+
+      ].forEach((key) => {
+        if (key in this.options) {
+          resolveOptions[key] = this.options[key]
+        }
+      })
+
+      resolve(dep, resolveOptions, (err, real) => {
         if (err) {
           return done({
             code: 'MODULE_NOT_FOUND',

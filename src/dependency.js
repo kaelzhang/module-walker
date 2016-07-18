@@ -6,13 +6,24 @@ const util = require('util')
 const unique = require('make-unique')
 const utils = require('./utils')
 
+const set = require('set-options')
+
+const DEFAULT_OPTIONS = {
+  commentRequire: false,
+  requireResolve: true,
+  requireAsync: false,
+  checkRequireLength: false,
+  allowNonLiteralRequire: true
+}
 
 // Parses an AST and get its dependencies and code
 // @public
 // @param {Object} ast babylon ast
 // @param {Object} options
 // @param {function()} callback
-parser.parseDependenciesFromAST = (ast, options = {}) => {
+parser.parseDependenciesFromAST = (ast, options) => {
+  options = set(options, DEFAULT_OPTIONS)
+
   return new Promise((resolve, reject) => {
     parser._parseDependenciesFromAST(ast, options, (err, result) => {
       if (err) {
