@@ -2,12 +2,28 @@
 
 const { parse } = require('babylon')
 const set = require('set-options')
+const code = require('print-code')
 
 const DEFAULT_BABYLON_OPTIONS = {
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
   sourceType: 'module'
 }
+
+
+// Print the code of the error slice
+exports.printCode = function (content, loc) {
+  var gen = code(content)
+    .highlight(loc.line)
+    .slice(Math.max(0, loc.line - 2), loc.line + 2)
+
+  if (typeof loc.column === 'number') {
+    gen.arrow_mark(loc.line, loc.column)
+  }
+
+  return gen.get()
+}
+
 
 // @public
 exports.astFromSource = (code, options = {}) => {
