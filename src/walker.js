@@ -22,7 +22,7 @@ const set = require('set-options')
 // [ref](http://nodejs.org/api/modules.html#modules_file_modules)
 const EXTS_NODE = ['.js', '.json', '.node']
 const DEFAULT_WALKER_OPTIONS = {
-  concurrency: 10,
+  concurrency: 50,
   extensions: EXTS_NODE,
   allowCyclic: true,
   allowAbsoluteDependency: true
@@ -51,10 +51,9 @@ module.exports = class Walker extends EventEmitter {
 
   _init_queue () {
     this.queue = async.queue((task, done) => {
-      // `path` will always be an absolute path.
-      let path = task.path
-
-      this._parse_file(path, err => {
+      // `filename` will always be an absolute path.
+      let filename = task.node.id
+      this._parse_file(filename, task.type, err => {
         if (!err) {
           return done()
         }
@@ -74,23 +73,31 @@ module.exports = class Walker extends EventEmitter {
   _walk (entries) {
     make_array(entries).forEach(entry => {
       entry = node_path.resolve(entry)
-      this._walk_one(entry)
+      let node = this._get_node(entry)
+      if (node) {
+        return
+      }
+
+      this._walk_one(this._create_node(entry))
     })
   }
 
-  _walk_one (entry) {
-    if (this._has_node(entry)) {
+  _walk_one (node, type) {
+    type = type || 'require'
+
+    // All ready parsed
+    if (~node.type.indexOf(type)) {
       return
     }
-
-    let node = this._create_node(entry)
+    node.type.push(type)
 
     if (node.foreign) {
       return
     }
 
     this.queue.push({
-      path: entry
+      node: node,
+      type: type
     })
   }
 
@@ -98,23 +105,20 @@ module.exports = class Walker extends EventEmitter {
     this.callback(this.error || null, this.nodes)
   }
 
-  _parse_file (path, callback) {
-    this._get_compiled_content(path, (err, compiled) => {
+  _parse_file (path, type, callback) {
+    let node = this._get_node(path)
+
+    this._get_compiled_content(node, err => {
       if (err) {
         return callback(err)
       }
 
-      let node = this._get_node(path)
-      node.require = {}
-      node.resolve = {}
-      node.async = {}
-      node.code = compiled.content
-
-      if (!compiled.js) {
+      if (!node.js || type !== 'require') {
         return callback(null)
       }
 
-      let ast = astFromSource(compiled.content)
+      let ast = astFromSource(node.content)
+      node.ast = ast
 
       parseDependenciesFromAST(ast, this.options).then(
         (data) => {
@@ -131,13 +135,25 @@ module.exports = class Walker extends EventEmitter {
     })
   }
 
-  _get_compiled_content (filename, callback) {
+  _get_compiled_content (node, callback) {
+    if (node.content) {
+      return callback(null)
+    }
+
+    let filename = node.id
     this._read(filename, (err, content) => {
       if (err) {
         return callback(err)
       }
 
-      this._compile(filename, content, callback)
+      this._compile(filename, content, (err, compiled) => {
+        if (err) {
+          return callback(err)
+        }
+
+        mix(node, compiled)
+        callback(null)
+      })
     })
   }
 
@@ -179,9 +195,14 @@ module.exports = class Walker extends EventEmitter {
 
     // If no registered compilers, just return
     function init (done) {
+      let node = matchExt(filename, 'node')
+      let json = matchExt(filename, 'json')
+
       done(null, {
         content: content,
-        js: matchExt(filename, 'js')
+        json: json,
+        node: node,
+        js: !node && !json
       })
     }
 
@@ -189,8 +210,7 @@ module.exports = class Walker extends EventEmitter {
   }
 
   _parse_dependencies_by_type (path, paths, type, callback) {
-    var options = this.options
-    var node = this._get_node(path)
+    let node = this._get_node(path)
 
     async.each(paths, (dep, done) => {
       var origin = dep
@@ -205,7 +225,7 @@ module.exports = class Walker extends EventEmitter {
           }
         }
 
-        if (!options.allowAbsoluteDependency) {
+        if (!this.options.allowAbsoluteDependency) {
           return done(message)
         } else {
           this.emit('warn', message)
@@ -224,7 +244,7 @@ module.exports = class Walker extends EventEmitter {
 
       let resolveOptions = {
         basedir: node_path.dirname(path),
-        extensions: options.extensions
+        extensions: this.options.extensions
       }
 
       ;[
@@ -288,18 +308,21 @@ module.exports = class Walker extends EventEmitter {
   _deal_dependency (dep, real, node, type, callback) {
     node[type][dep] = real
 
-    if (!this._has_node(real)) {
-      // Only walk a module file if the node not exists.
-      this._walk_one(real)
-      return callback(null)
-    }
-
-    var sub_node = this._get_node(real)
+    let sub_node = this._get_node(real)
+    let new_node = sub_node || this._create_node(real)
+    this._walk_one(new_node, type)
 
     // We only check the node if it meets the conditions below:
     // 1. already exists: all new nodes are innocent.
     // 2. but assigned as a dependency of anothor node
     // If one of the ancestor dependents of `node` is `current`, it forms a circle.
+
+    // If newly created node, then skip checking.
+    if (!sub_node) {
+      return callback(null)
+    }
+    sub_node = new_node
+
     var circular_trace
     // node -> sub_node
     if (circular_trace = traceCircular(sub_node, node, this.nodes)) {
@@ -321,10 +344,6 @@ module.exports = class Walker extends EventEmitter {
     callback(null)
   }
 
-  _has_node  (path) {
-    return path in this.nodes
-  }
-
   _get_node (path) {
     return this.nodes[path]
   }
@@ -337,7 +356,11 @@ module.exports = class Walker extends EventEmitter {
   _create_node (id) {
     return this.nodes[id] = {
       id: id,
-      foreign: this._is_foreign(id)
+      foreign: this._is_foreign(id),
+      type: [],
+      require: {},
+      resolve: {},
+      async: {}
     }
   }
 
@@ -354,7 +377,10 @@ module.exports = class Walker extends EventEmitter {
     // and all paths are parsed from require(foo),
     // so `foo` will never be affected by windows,
     // so we should not use `'.' + node_path.sep` to test these paths
-    return path.indexOf('./') === 0 || path.indexOf('../') === 0
+    return path === '.'
+      || path === '..'
+      || path.indexOf('./') === 0
+      || path.indexOf('../') === 0
   }
 
   // 1. <path>
