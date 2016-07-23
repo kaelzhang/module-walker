@@ -51,19 +51,22 @@ parser._parseDependenciesFromAST = (ast, options, callback) => {
 
   try {
     parser._parseDependencies(ast, dependencies, options)
+
   } catch (e) {
+    let prefix = 'Error parsing dependencies: '
     return callback({
       code: 'WRONG_USAGE_REQUIRE',
-      message: 'Error parsing dependencies: ' + e.message,
+      message: prefix + e.message,
+      stack: prefix + e.stack,
       data: {
         error: e
       }
     })
   }
 
-  if (options.commentRequire) {
-    parser._parseComments(ast, dependencies, options)
-  }
+  // if (options.commentRequire) {
+  //   parser._parseComments(ast, dependencies, options)
+  // }
 
   callback(null, {
     require: unique(dependencies.normal),
@@ -147,7 +150,7 @@ parser._checkCommonJSDependencyNode = (
   }
 
   let args = node.arguments
-  let loc = node.callee.loc.start
+  let loc = node.callee.loc
   let loc_text = generateLocText(loc)
   let check_length = options.checkRequireLength
 
@@ -165,7 +168,10 @@ parser._checkCommonJSDependencyNode = (
   }
 
   if (arg1.type !== 'StringLiteral') {
-    utils.throw(!options.allowNonLiteralRequire, generateLocText(arg1.loc.start) + 'Method `require` only accepts a string literal.' )
+    utils.throw(
+      !options.allowNonLiteralRequire,
+      generateLocText(arg1.loc) + 'Method `require` only accepts a string literal.'
+    )
   } else {
     deps_array.push(arg1.value)
     return true
@@ -173,37 +179,37 @@ parser._checkCommonJSDependencyNode = (
 }
 
 
-const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
-const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
+// const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
+// const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
 
-const REGEX_REQUIRE =
-  new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
+// const REGEX_REQUIRE =
+//   new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
 
-const REGEX_REQUIRE_RESOLVE =
-  new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
+// const REGEX_REQUIRE_RESOLVE =
+//   new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
 
-const REGEX_REQUIRE_ASYNC =
-  new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
+// const REGEX_REQUIRE_ASYNC =
+//   new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
 
-// Parses `@require`, `@require.resolve`, `@require.async` in comments
-parser._parseComments = (ast, dependencies, options) => {
-  let comments = ast.comments
-  if (!comments) {
-    return
-  }
+// // Parses `@require`, `@require.resolve`, `@require.async` in comments
+// parser._parseComments = (ast, dependencies, options) => {
+//   let comments = ast.comments
+//   if (!comments) {
+//     return
+//   }
 
-  comments.forEach(comment => {
-    parser._parseByRegex(comment.value, REGEX_REQUIRE, dependencies.normal)
+//   comments.forEach(comment => {
+//     parser._parseByRegex(comment.value, REGEX_REQUIRE, dependencies.normal)
 
-    if (options.requireResolve) {
-      parser._parseByRegex(comment.value, REGEX_REQUIRE_RESOLVE, dependencies.resolve)
-    }
+//     if (options.requireResolve) {
+//       parser._parseByRegex(comment.value, REGEX_REQUIRE_RESOLVE, dependencies.resolve)
+//     }
 
-    if (options.requireAsync) {
-      parser._parseByRegex(comment.value, REGEX_REQUIRE_ASYNC, dependencies.async)
-    }
-  })
-}
+//     if (options.requireAsync) {
+//       parser._parseByRegex(comment.value, REGEX_REQUIRE_ASYNC, dependencies.async)
+//     }
+//   })
+// }
 
 
 // @param {string} content
@@ -218,5 +224,11 @@ parser._parseByRegex = (content, regex, matches) => {
 
 
 function generateLocText (loc) {
+  loc = loc && loc.start
+
+  if (!loc) {
+    return ''
+  }
+
   return 'Line ' + loc.line + ': Column ' + loc.column + ': '
 }
