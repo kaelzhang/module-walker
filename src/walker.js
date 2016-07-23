@@ -117,10 +117,7 @@ module.exports = class Walker extends EventEmitter {
         return callback(null)
       }
 
-      let ast = astFromSource(node.content)
-      node.ast = ast
-
-      parseDependenciesFromAST(ast, this.options).then(
+      parseDependenciesFromAST(node.ast, this.options).then(
         (data) => {
           async.each(['require', 'resolve', 'async'], (type, done) => {
             this._parse_dependencies_by_type(path, data[type], type, done)
@@ -128,7 +125,7 @@ module.exports = class Walker extends EventEmitter {
         },
 
         (err) => {
-          err.message = `${path}: $err.message`
+          err.message = `${path}: ${err.message}`
           callback(err)
         }
       )
@@ -152,6 +149,7 @@ module.exports = class Walker extends EventEmitter {
         }
 
         mix(node, compiled)
+        console.log(node)
         callback(null)
       })
     })
@@ -180,13 +178,30 @@ module.exports = class Walker extends EventEmitter {
       return c.test.test(filename)
 
     }).reduce((prev, c) => {
-      function task (compiled, done) {
-        let options = mix({
-          // adds `filename` to options of each compiler
-          filename: filename
+      let task = (compiled, done) => {
+        let ast = compiled.ast
 
-        }, c.options, false)
-        c.compiler(compiled.content, options, done)
+        // if no ast, try to generate ast
+        if (!ast && compiled.js) {
+          try {
+            ast = astFromSource(compiled.code, this.options)
+          } catch (e) {
+            return done(e)
+          }
+        }
+
+        let options = set({}, c.options)
+        if (ast) {
+          options.ast
+        }
+
+        if (compiled.map) {
+          options.map = compiled.map
+        }
+
+        // adds `filename` to options of each compiler
+        options.filename = filename
+        c.compiler(compiled.code, options, done)
       }
       prev.push(task)
       return prev
@@ -197,12 +212,13 @@ module.exports = class Walker extends EventEmitter {
     function init (done) {
       let node = matchExt(filename, 'node')
       let json = matchExt(filename, 'json')
+      let js = matchExt(filename, 'js')
 
       done(null, {
-        content: content,
-        json: json,
-        node: node,
-        js: !node && !json
+        code: content,
+        json,
+        node,
+        js
       })
     }
 
