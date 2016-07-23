@@ -173,55 +173,84 @@ module.exports = class Walker extends EventEmitter {
 
   // Applies all compilers to process the file content
   _compile (filename, content, callback) {
-    let tasks = this.options.compilers.filter(c => {
-      return c.test.test(filename)
+    let matchCompiler = (compiler, compiled) => {
+      let test = compiler.test
 
-    }).reduce((prev, c) => {
-      let task = (compiled, done) => {
-        let ast = compiled.ast
-
-        // if no ast, try to generate ast
-        if (!ast && compiled.js) {
-          try {
-            ast = astFromSource(compiled.code, this.options)
-          } catch (e) {
-            return done(e)
-          }
-        }
-
-        let options = set({}, c.options)
-        if (ast) {
-          options.ast
-        }
-
-        if (compiled.map) {
-          options.map = compiled.map
-        }
-
-        // adds `filename` to options of each compiler
-        options.filename = filename
-        c.compiler(compiled.code, options, done)
+      if (util.isRegExp(test)) {
+        return test.test(compiled.filename)
       }
-      prev.push(task)
-      return prev
 
-    }, [init])
-
-    // If no registered compilers, just return
-    function init (done) {
-      let node = matchExt(filename, 'node')
-      let json = matchExt(filename, 'json')
-      let js = matchExt(filename, 'js')
-
-      done(null, {
-        code: content,
-        json,
-        node,
-        js
-      })
+      // if compiler.test
+      if (util.isFunction(test)) {
+        return test(compiled)
+      }
     }
 
-    async.waterfall(tasks, callback)
+    let compilers = this.options.compilers
+    let length = compilers.length
+    let i = 0
+    let done = (err, compiled) => {
+      if (err) {
+        return callback(err)
+      }
+
+      // ensure compiled.filename
+      compiled.filename = compiled.filename || filename
+
+      let ast = compiled.ast
+
+      // if no ast, try to generate ast
+      if (!ast && compiled.js) {
+        try {
+          ast = astFromSource(compiled.code, this.options)
+          compiled.ast = ast
+        } catch (e) {
+          return callback(e)
+        }
+      }
+
+      let compiler
+      while (i < length) {
+        compiler = compilers[i ++]
+
+        if (matchCompiler(compiler, compiled)) {
+          return task(done, compiler, compiled)
+        }
+      }
+
+      callback(null, compiled)
+    }
+
+    let task = (done, compiler, compiled) => {
+      // the first task
+      if (!compiler) {
+        let node = matchExt(filename, 'node')
+        let json = matchExt(filename, 'json')
+        let js = matchExt(filename, 'js')
+
+        return done(null, {
+          code: content,
+          json,
+          node,
+          js
+        })
+      }
+
+      let compilerOptions = set({}, compiler.options)
+      if (compiled.ast) {
+        compilerOptions.ast
+      }
+
+      if (compiled.map) {
+        compilerOptions.map = compiled.map
+      }
+
+      // adds `filename` to options of each compiler
+      compilerOptions.filename = filename
+      compiler.compiler(compiled.code, compilerOptions, done)
+    }
+
+    task(done)
   }
 
   _parse_dependencies_by_type (path, paths, type, callback) {
