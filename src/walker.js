@@ -149,7 +149,6 @@ module.exports = class Walker extends EventEmitter {
         }
 
         mix(node, compiled)
-        console.log(node)
         callback(null)
       })
     })
