@@ -40,7 +40,7 @@
   "devDependencies": {
     "ava": "^0.15.2",
     "chai": "^3.5.0",
-    "neuron-jade-compiler": "^1.0.6"
+    "neuron-jade-compiler": "^2.0.0"
   },
   "dependencies": {
     "async": "^2.0.0",
