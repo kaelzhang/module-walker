@@ -4,7 +4,8 @@ const { parseDependenciesFromAST } = require('./dependency')
 const traceCircular = require('./circular')
 const {
   matchExt,
-  astFromSource
+  astFromSource,
+  resolve
 } = require('./utils')
 
 const node_path = require('path')
@@ -12,7 +13,6 @@ const fs = require('fs')
 const util = require('util')
 const { EventEmitter } = require('events')
 
-const resolve = require('resolve')
 const mix = require('mix2')
 const make_array = require('make-array')
 const async = require('async')
@@ -25,10 +25,9 @@ const DEFAULT_WALKER_OPTIONS = {
   concurrency: 50,
   extensions: EXTS_NODE,
   allowCyclic: true,
-  allowAbsoluteDependency: true
-  // pathFilter
-  // paths:
-  // moduleDirectory: 'node_modules'
+  allowAbsoluteDependency: true,
+  parse: astFromSource,
+  resolve: resolve
 }
 
 
@@ -202,7 +201,7 @@ module.exports = class Walker extends EventEmitter {
       // if no ast, try to generate ast
       if (!ast && compiled.js) {
         try {
-          ast = astFromSource(compiled.code, this.options)
+          ast = this.options.parse(compiled.code, this.options)
           compiled.ast = ast
         } catch (e) {
           return callback(e)
@@ -291,18 +290,7 @@ module.exports = class Walker extends EventEmitter {
         extensions: this.options.extensions
       }
 
-      ;[
-        'pathFilter',
-        'paths',
-        'moduleDirectory'
-
-      ].forEach((key) => {
-        if (key in this.options) {
-          resolveOptions[key] = this.options[key]
-        }
-      })
-
-      resolve(dep, resolveOptions, (err, real) => {
+      this.options.resolve(dep, resolveOptions, (err, real) => {
         if (err) {
           return done({
             code: 'MODULE_NOT_FOUND',

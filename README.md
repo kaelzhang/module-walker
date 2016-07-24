@@ -73,6 +73,8 @@ which is really helpful for browsers
 - **allowImportExportEverywhere** `Boolean=false` By default, import and export declarations can only appear at a program's top level. Setting this option to true allows them anywhere where a statement is allowed. This option is used for `babylon`.
 - **allowReturnOutsideFunction** `Boolean=false` By default, a return statement at the top level raises an error. Set this to true to accept such code. This option is used for `babylon`.
 - **sourceType** `String='module'` Indicate the mode the code should be parsed in. Can be either "script" or "module". This option is used for `babylon`.
+- **parse** `function(code, options)=walker.astFromSource` Method to parse and return the ast([estree](https://github.com/estree/estree)) of the given `code`.(probably don't use this)
+- **resolve** `function(id, options, callback)=walker.resolve` Asynchronous method to `require.resolve()` the given `id`.(probably don't use this)
 
 #### options.extensions
 

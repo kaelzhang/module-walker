@@ -3,6 +3,7 @@
 const { parse } = require('babylon')
 const set = require('set-options')
 const code = require('print-code')
+const resolve = require('resolve')
 
 const DEFAULT_BABYLON_OPTIONS = {
   allowImportExportEverywhere: true,
@@ -29,6 +30,11 @@ exports.printCode = function (content, loc) {
 exports.astFromSource = (code, options = {}) => {
   options = set(options, DEFAULT_BABYLON_OPTIONS)
   return parse(code, options)
+}
+
+
+exports.resolve = (id, options = {}, callback) => {
+  return resolve(id, options, callback)
 }
 
 
