@@ -1,6 +1,6 @@
 {
   "name": "module-walker",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
@@ -43,7 +43,6 @@
     "neuron-jade-compiler": "^1.0.6"
   },
   "dependencies": {
-    "array-unique": "^0.2.1",
     "async": "^2.0.0",
     "babylon": "^6.8.1",
     "make-array": "^1.0.1",

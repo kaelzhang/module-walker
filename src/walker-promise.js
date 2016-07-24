@@ -5,7 +5,7 @@ const { EventEmitter } = require('events')
 
 const set = require('set-options')
 const make_array = require('make-array')
-const unique = require('array-unique')
+const unique = require('make-unique')
 
 const Walker = require('./walker')
 
