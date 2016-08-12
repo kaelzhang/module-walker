@@ -4,7 +4,9 @@ let parser = exports
 const node_path = require('path')
 const util = require('util')
 const unique = require('make-unique')
-const utils = require('./utils')
+const {
+  printCode
+} = require('./utils')
 
 const set = require('set-options')
 
@@ -21,11 +23,11 @@ const DEFAULT_OPTIONS = {
 // @param {Object} ast babylon ast
 // @param {Object} options
 // @param {function()} callback
-parser.parseDependenciesFromAST = (ast, options) => {
+parser.parseDependenciesFromAST = (ast, code, options) => {
   options = set(options, DEFAULT_OPTIONS)
 
   return new Promise((resolve, reject) => {
-    parser._parseDependenciesFromAST(ast, options, (err, result) => {
+    parser._parseDependenciesFromAST(ast, code, options, (err, result) => {
       if (err) {
         return reject(err)
       }
@@ -36,7 +38,7 @@ parser.parseDependenciesFromAST = (ast, options) => {
 }
 
 
-parser._parseDependenciesFromAST = (ast, options, callback) => {
+parser._parseDependenciesFromAST = (ast, code, options, callback) => {
   let normal = []
   let resolve = []
   let async = []
@@ -53,11 +55,19 @@ parser._parseDependenciesFromAST = (ast, options, callback) => {
     parser._parseDependencies(ast, dependencies, options)
 
   } catch (e) {
-    let prefix = 'Error parsing dependencies: '
+    let message = e.message
+    let loc = e.loc
+
+    // TODO: should print origin code
+    // if (loc) {
+    //   let printed = printCode(code, loc)
+    //   message += `\n\n${printed}\n\n`
+    // }
+
     return callback({
       code: 'WRONG_USAGE_REQUIRE',
-      message: prefix + e.message,
-      stack: prefix + e.stack,
+      message,
+      loc,
       data: {
         error: e
       }
@@ -128,6 +138,21 @@ parser._parseDependencies = (node, dependencies, options) => {
 }
 
 
+parser._throwParseError = (enable, message, loc) => {
+  if (!enable) {
+    return
+  }
+
+  let error = new SyntaxError(message)
+
+  if (loc && loc.start) {
+    error.loc = loc.start
+  }
+
+  throw error
+}
+
+
 parser._checkES6Imported = (node, dependencies) => {
   if (node.type !== 'ImportDeclaration') {
     return
@@ -151,15 +176,14 @@ parser._checkCommonJSDependencyNode = (
 
   let args = node.arguments
   let loc = node.callee.loc
-  let loc_text = generateLocText(loc)
   let check_length = options.checkRequireLength
 
   if (args.length === 0) {
-    utils.throw(check_length, loc_text + 'Method `require` accepts one and only one parameter.')
+    parser._throwParseError(check_length, generateLocText(loc) + 'Method `require` accepts one and only one parameter.', loc)
   }
 
   if (check_if_length_exceeded && args.length > 1) {
-    utils.throw(check_length, loc_text + 'Method `require` should not contains more than one parameters')
+    parser._throwParseError(check_length, generateLocText(loc) + 'Method `require` should not contains more than one parameters', loc)
   }
 
   let arg1 = args[0]
@@ -168,9 +192,10 @@ parser._checkCommonJSDependencyNode = (
   }
 
   if (arg1.type !== 'StringLiteral') {
-    utils.throw(
+    parser._throwParseError(
       !options.allowNonLiteralRequire,
-      generateLocText(arg1.loc) + 'Method `require` only accepts a string literal.'
+      generateLocText(arg1.loc) + 'Method `require` only accepts a string literal.',
+      arg1.loc
     )
   } else {
     deps_array.push(arg1.value)

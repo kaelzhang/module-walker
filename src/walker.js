@@ -116,7 +116,7 @@ module.exports = class Walker extends EventEmitter {
         return callback(null)
       }
 
-      parseDependenciesFromAST(node.ast, this.options).then(
+      parseDependenciesFromAST(node.ast, node.code, this.options).then(
         (data) => {
           async.each(['require', 'resolve', 'async'], (type, done) => {
             this._parse_dependencies_by_type(path, data[type], type, done)
@@ -197,11 +197,19 @@ module.exports = class Walker extends EventEmitter {
       compiled.filename = compiled.filename || filename
 
       let ast = compiled.ast
+      let options = mix({
+        filename: filename
+
+      }, this.options, [
+        'allowImportExportEverywhere',
+        'allowReturnOutsideFunction',
+        'sourceType'
+      ])
 
       // if no ast, try to generate ast
       if (!ast && compiled.js) {
         try {
-          ast = this.options.parse(compiled.code, this.options)
+          ast = this.options.parse(compiled.code, options)
           compiled.ast = ast
         } catch (e) {
           return callback(e)

@@ -26,22 +26,40 @@ exports.printCode = function (content, loc) {
 }
 
 
+exports.flavorAstError = (error, {filename, code}) => {
+  const loc = error.loc
+  const printed = exports.printCode(code, loc)
+  let message = `${error.message} while parsing "${filename}"
+
+${printed}
+`
+  let e = new SyntaxError(message)
+  e.loc = loc
+  throw e
+}
+
+
 // @public
 exports.astFromSource = (code, options = {}) => {
   options = set(options, DEFAULT_BABYLON_OPTIONS)
-  return parse(code, options)
+
+  let ast
+
+  try {
+    ast = parse(code, options)
+  } catch (e) {
+    exports.flavorAstError(e, {
+      filename: options.filename,
+      code
+    })
+  }
+
+  return ast
 }
 
 
 exports.resolve = (id, options = {}, callback) => {
   return resolve(id, options, callback)
-}
-
-
-exports.throw = function (enable, message) {
-  if (enable) {
-    throw new Error(message)
-  }
 }
 
 
