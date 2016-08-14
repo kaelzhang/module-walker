@@ -18,7 +18,9 @@ const cases = [
     desc: 'files to be compiled, that contains dependency',
     file: 'jade/index.js',
     compilers: [{
-      test: /\.jade$/,
+      test: (compiled) => {
+        return /\.jade$/.test(compiled.filename)
+      },
       compiler: jade_compiler
     }],
     expect: function (err, path, nodes, entry, t) {

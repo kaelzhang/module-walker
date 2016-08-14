@@ -66,7 +66,7 @@ cases.forEach(function (c) {
     let content = fs.readFileSync(file).toString()
     let ast = utils.astFromSource(content)
 
-    dependency.parseDependenciesFromAST(ast, c.options || {})
+    dependency.parseDependenciesFromAST(ast, content, c.options || {})
     .then(
       (result) => {
         t.end()

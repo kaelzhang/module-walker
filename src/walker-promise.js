@@ -6,6 +6,7 @@ const { EventEmitter } = require('events')
 const set = require('set-options')
 const make_array = require('make-array')
 const unique = require('make-unique')
+const { Minimatch } = require('minimatch')
 
 const Walker = require('./walker')
 
@@ -23,15 +24,38 @@ module.exports = class WalkerWrapper extends EventEmitter {
   }
 
   register (new_compilers) {
-    make_array(new_compilers).forEach(compiler => {
-      compiler.test = util.isRegExp(compiler.test)
-        ? compiler.test
-        : new RegExp(compiler.test)
+    make_array(new_compilers).forEach(() => {
 
-      this.options.compilers.push(compiler)
+      this.options.compilers.push({
+        test: this._compilerTest(test),
+        compiler,
+        options
+      })
     })
 
     return this
+  }
+
+  _cleanCompiler ({
+    test,
+    compiler,
+    options
+  }) {
+    if (typeof test === 'function') {
+      return test
+    }
+
+    if (util.isRegExp(test)) {
+      return (compiled) => {
+        return test.test(compiled.filename)
+      }
+    }
+
+    let mm = new Minimatch(test)
+
+    return (compiled) => {
+      return mm.match(compiled.filename)
+    }
   }
 
   _createPromise () {

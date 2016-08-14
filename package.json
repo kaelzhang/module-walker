@@ -1,6 +1,6 @@
 {
   "name": "module-walker",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
@@ -47,6 +47,7 @@
     "babylon": "^6.8.1",
     "make-array": "^1.0.1",
     "make-unique": "^1.0.4",
+    "minimatch": "^3.0.3",
     "mix2": "^1.0.1",
     "print-code": "^1.0.2",
     "resolve": "^1.1.7",

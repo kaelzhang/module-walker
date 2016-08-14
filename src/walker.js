@@ -172,18 +172,7 @@ module.exports = class Walker extends EventEmitter {
 
   // Applies all compilers to process the file content
   _compile (filename, content, callback) {
-    let matchCompiler = (compiler, compiled) => {
-      let test = compiler.test
-
-      if (util.isRegExp(test)) {
-        return test.test(compiled.filename)
-      }
-
-      // if compiler.test
-      if (util.isFunction(test)) {
-        return test(compiled)
-      }
-    }
+    let matchCompiler = (compiler, compiled) => compiler.test(compiled)
 
     let compilers = this.options.compilers
     let length = compilers.length
