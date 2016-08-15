@@ -24,8 +24,7 @@ module.exports = class WalkerWrapper extends EventEmitter {
   }
 
   register (new_compilers) {
-    make_array(new_compilers).forEach(() => {
-
+    make_array(new_compilers).forEach(({test, compiler, options}) => {
       this.options.compilers.push({
         test: this._compilerTest(test),
         compiler,
