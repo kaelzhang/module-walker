@@ -16,6 +16,7 @@ module.exports = class WalkerWrapper extends EventEmitter {
     this.options = options
     this.entries = []
     this.options.compilers = make_array(this.options.compilers)
+      .map(this._cleanCompiler, this)
   }
 
   walk (entry) {
@@ -24,22 +25,14 @@ module.exports = class WalkerWrapper extends EventEmitter {
   }
 
   register (new_compilers) {
-    make_array(new_compilers).forEach(({test, compiler, options}) => {
-      this.options.compilers.push({
-        test: this._compilerTest(test),
-        compiler,
-        options
-      })
+    make_array(new_compilers).forEach(compiler => {
+      this.options.compilers.push(this._cleanCompiler(compiler))
     })
 
     return this
   }
 
-  _cleanCompiler ({
-    test,
-    compiler,
-    options
-  }) {
+  _compilerTest (test) {
     if (typeof test === 'function') {
       return test
     }
@@ -54,6 +47,21 @@ module.exports = class WalkerWrapper extends EventEmitter {
 
     return (compiled) => {
       return mm.match(compiled.filename)
+    }
+  }
+
+
+  _cleanCompiler ({
+    test,
+    compiler,
+    options
+  }) {
+    test = this._compilerTest(test)
+
+    return {
+      test,
+      compiler,
+      options
     }
   }
 

@@ -7,8 +7,13 @@ const walker = require('../')
 const node_path = require('path')
 const util = require('util')
 const make_array = require('make-array')
+const jade_compiler = require('neuron-jade-compiler')
 
 const root = node_path.join(__dirname, 'fixtures', 'walker')
+
+function filename (file) {
+  return node_path.join(__dirname, 'fixtures', 'compiler', file)
+}
 
 function dir_slash (err, path, nodes, entry, t) {
   t.is(err, null)
@@ -321,6 +326,36 @@ const cases = [
   //     t.is(entry.async['./c.js'], node_path.join(node_path.dirname(path), './c.js'))
   //   }
   // }
+
+  {
+    desc: 'compiler with function tester',
+    file: filename('jade/index.js'),
+    compilers: [{
+      test: (compiled) => {
+        return /\.jade$/.test(compiled.filename)
+      },
+      compiler: jade_compiler
+    }],
+    expect: function (err, path, nodes, entry, t) {
+      t.is(err, null)
+      var jade = filename('jade/a.jade')
+      t.is(jade in nodes, true)
+    }
+  },
+
+  {
+    desc: 'compiler with regex tester',
+    file: filename('jade/index.js'),
+    compilers: [{
+      test: /\.jade$/,
+      compiler: jade_compiler
+    }],
+    expect: function (err, path, nodes, entry, t) {
+      t.is(err, null)
+      var jade = filename('jade/a.jade')
+      t.is(jade in nodes, true)
+    }
+  }
 ]
 
 
@@ -343,7 +378,7 @@ cases.forEach(function (c) {
 
     i(desc, t => {
       let file = make_array(c.file).map(function(f){
-        return node_path.join(root, f)
+        return node_path.resolve(root, f)
       })
       let warnings = []
       let tests = make_array(c.expect)
