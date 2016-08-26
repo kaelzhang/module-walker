@@ -53,6 +53,17 @@ const cases = [
     file: 'import.js',
     options : {},
     deps: 'a b c d e f g h i'.split(' ')
+  },
+  {
+    desc: 'comment require',
+    file: 'comment.js',
+    options: {
+      commentRequire: true,
+      requireAsync: true
+    },
+    deps: ['./a', 'a'],
+    resolve: ['c'],
+    async: ['b']
   }
 ]
 
@@ -77,9 +88,12 @@ cases.forEach(function (c) {
 
         if (util.isArray(c.deps)) {
           t.deepEqual(result.require.sort(), c.deps.sort())
+          t.deepEqual(result.async.sort(), (c.async || []).sort())
+          t.deepEqual(result.resolve.sort(), (c.resolve || []).sort())
         }
       },
       (e) => {
+        console.error(e)
         t.end()
         if (!c.error) {
           t.fail()

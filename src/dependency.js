@@ -50,16 +50,14 @@ parser._parseDependenciesFromAST = (ast, code, options, callback) => {
     async
   }
 
-  ast = ast.program.body
-
   try {
-    parser._parseDependencies(ast, dependencies, options)
+    parser._parseDependencies(ast.program.body, dependencies, options)
 
   } catch (e) {
     let message = e.message
     let loc = e.loc
 
-    // TODO: should print origin code
+    // TODO: should print origin code, according to sourcemap
     // if (loc) {
     //   let printed = printCode(code, loc)
     //   message += `\n\n${printed}\n\n`
@@ -75,9 +73,9 @@ parser._parseDependenciesFromAST = (ast, code, options, callback) => {
     })
   }
 
-  // if (options.commentRequire) {
-  //   parser._parseComments(ast, dependencies, options)
-  // }
+  if (options.commentRequire) {
+    parser._parseComments(ast, dependencies, options)
+  }
 
   callback(null, {
     require: unique(dependencies.normal),
@@ -210,37 +208,37 @@ parser._checkCommonJSDependencyNode = (
 }
 
 
-// const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
-// const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
+const REGEX_LEFT_PARENTHESIS_STRING = '\\s*\\(\\s*([\'"])([A-Za-z0-9_\\/\\-\\.]+)\\1\\s*'
+const REGEX_PARENTHESIS_STRING      = REGEX_LEFT_PARENTHESIS_STRING + '\\)'
 
-// const REGEX_REQUIRE =
-//   new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
+const REGEX_REQUIRE =
+  new RegExp('@require'           + REGEX_PARENTHESIS_STRING, 'g')
 
-// const REGEX_REQUIRE_RESOLVE =
-//   new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
+const REGEX_REQUIRE_RESOLVE =
+  new RegExp('@require\\.resolve' + REGEX_PARENTHESIS_STRING, 'g')
 
-// const REGEX_REQUIRE_ASYNC =
-//   new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
+const REGEX_REQUIRE_ASYNC =
+  new RegExp('@require\\.async'   + REGEX_LEFT_PARENTHESIS_STRING, 'g')
 
-// // Parses `@require`, `@require.resolve`, `@require.async` in comments
-// parser._parseComments = (ast, dependencies, options) => {
-//   let comments = ast.comments
-//   if (!comments) {
-//     return
-//   }
+// Parses `@require`, `@require.resolve`, `@require.async` in comments
+parser._parseComments = (ast, dependencies, options) => {
+  let comments = ast.comments
+  if (!comments) {
+    return
+  }
 
-//   comments.forEach(comment => {
-//     parser._parseByRegex(comment.value, REGEX_REQUIRE, dependencies.normal)
+  comments.forEach(comment => {
+    parser._parseByRegex(comment.value, REGEX_REQUIRE, dependencies.normal)
 
-//     if (options.requireResolve) {
-//       parser._parseByRegex(comment.value, REGEX_REQUIRE_RESOLVE, dependencies.resolve)
-//     }
+    if (options.requireResolve) {
+      parser._parseByRegex(comment.value, REGEX_REQUIRE_RESOLVE, dependencies.resolve)
+    }
 
-//     if (options.requireAsync) {
-//       parser._parseByRegex(comment.value, REGEX_REQUIRE_ASYNC, dependencies.async)
-//     }
-//   })
-// }
+    if (options.requireAsync) {
+      parser._parseByRegex(comment.value, REGEX_REQUIRE_ASYNC, dependencies.async)
+    }
+  })
+}
 
 
 // @param {string} content
