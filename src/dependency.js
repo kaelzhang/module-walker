@@ -15,7 +15,8 @@ const DEFAULT_OPTIONS = {
   requireResolve: true,
   requireAsync: false,
   checkRequireLength: false,
-  allowNonLiteralRequire: true
+  allowNonLiteralRequire: true,
+  allowAsyncNonLiteralRequire: true
 }
 
 // Parses an AST and get its dependencies and code
@@ -118,7 +119,12 @@ parser._parseDependencies = (node, dependencies, options) => {
         && node.callee.type === 'MemberExpression'
         && node.callee.object.name === 'require'
         && node.callee.property.name === 'async'
-    }, dependencies.async, options, false)
+    },
+    dependencies.async,
+    Object.assign({}, options, {
+      allowNonLiteralRequire: options.allowAsyncNonLiteralRequire
+    }),
+    false)
 
   || parser._checkES6Imported(node, dependencies.normal)
 
