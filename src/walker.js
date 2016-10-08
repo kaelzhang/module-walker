@@ -172,34 +172,20 @@ module.exports = class Walker extends EventEmitter {
 
   // Applies all compilers to process the file content
   _compile (filename, content, callback) {
-    let matchCompiler = (compiler, compiled) => compiler.test(compiled)
+    const matchCompiler = (compiler, compiled) => compiler.test(compiled)
 
-    let compilers = this.options.compilers
-    let length = compilers.length
+    const compilers = this.options.compilers
+    const length = compilers.length
     let i = 0
-    let done = (err, compiled) => {
+    const done = (err, compiled) => {
       if (err) {
         return callback(err)
       }
 
-      // ensure compiled.filename
-      compiled.filename = compiled.filename || filename
-
-      let ast = compiled.ast
-      let options = mix({
-        filename: filename
-
-      }, this.options, [
-        'allowImportExportEverywhere',
-        'allowReturnOutsideFunction',
-        'sourceType'
-      ])
-
       // if no ast, try to generate ast
-      if (!ast && compiled.js) {
+      if (!compiled.ast && compiled.js) {
         try {
-          ast = this.options.parse(compiled.code, options)
-          compiled.ast = ast
+          compiled.ast = this._parse_ast(compiled.code, filename)
         } catch (e) {
           return callback(e)
         }
@@ -217,24 +203,11 @@ module.exports = class Walker extends EventEmitter {
       callback(null, compiled)
     }
 
-    let task = (done, compiler, compiled) => {
-      // the first task
-      if (!compiler) {
-        let node = matchExt(filename, 'node')
-        let json = matchExt(filename, 'json')
-        let js = matchExt(filename, 'js')
+    const task = (done, compiler, compiled) => {
+      const compilerOptions = set({}, compiler.options)
 
-        return done(null, {
-          code: content,
-          json,
-          node,
-          js
-        })
-      }
-
-      let compilerOptions = set({}, compiler.options)
       if (compiled.ast) {
-        compilerOptions.ast
+        compilerOptions.ast = compiled.ast
       }
 
       if (compiled.map) {
@@ -246,7 +219,30 @@ module.exports = class Walker extends EventEmitter {
       compiler.compiler(compiled.code, compilerOptions, done)
     }
 
-    task(done)
+    const node = matchExt(filename, 'node')
+    const json = matchExt(filename, 'json')
+    const js = matchExt(filename, 'js')
+
+    done(null, {
+      code: content,
+      json,
+      node,
+      js
+    })
+  }
+
+  _parse_ast (code, filename) {
+    const options = mix({
+      filename: filename
+
+    }, this.options, [
+      'allowImportExportEverywhere',
+      'allowReturnOutsideFunction',
+      'sourceType',
+      'plugins'
+    ])
+
+    return this.options.parse(code, options)
   }
 
   _parse_dependencies_by_type (path, paths, type, callback) {

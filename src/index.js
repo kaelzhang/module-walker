@@ -19,4 +19,3 @@ function walker (options) {
 
 walker.parseDependenciesFromAST = parseDependenciesFromAST
 walker.astFromSource = astFromSource
-walker.resolve = resolve

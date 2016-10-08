@@ -93,7 +93,6 @@ cases.forEach(function (c) {
         }
       },
       (e) => {
-        console.error(e)
         t.end()
         if (!c.error) {
           t.fail()

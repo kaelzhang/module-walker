@@ -29,7 +29,7 @@ exports.printCode = function (content, loc) {
 exports.flavorAstError = (error, {filename, code}) => {
   const loc = error.loc
   const printed = exports.printCode(code, loc)
-  let message = `${error.stack || error.message} while parsing "${filename}"
+  let message = `${error.message} while parsing "${filename}"
 
 ${printed}
 `
