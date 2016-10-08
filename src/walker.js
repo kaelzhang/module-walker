@@ -177,6 +177,7 @@ module.exports = class Walker extends EventEmitter {
     const compilers = this.options.compilers
     const length = compilers.length
     let i = 0
+
     const done = (err, compiled) => {
       if (err) {
         return callback(err)
@@ -185,11 +186,14 @@ module.exports = class Walker extends EventEmitter {
       // if no ast, try to generate ast
       if (!compiled.ast && compiled.js) {
         try {
-          compiled.ast = this._parse_ast(compiled.code, filename)
+          compiled.ast = this.options.parse(compiled.code, filename)
         } catch (e) {
           return callback(e)
         }
       }
+
+      // make sure `filename`
+      compiled.filename = filename
 
       let compiler
       while (i < length) {
@@ -229,20 +233,6 @@ module.exports = class Walker extends EventEmitter {
       node,
       js
     })
-  }
-
-  _parse_ast (code, filename) {
-    const options = mix({
-      filename: filename
-
-    }, this.options, [
-      'allowImportExportEverywhere',
-      'allowReturnOutsideFunction',
-      'sourceType',
-      'plugins'
-    ])
-
-    return this.options.parse(code, options)
   }
 
   _parse_dependencies_by_type (path, paths, type, callback) {

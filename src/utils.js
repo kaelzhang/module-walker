@@ -2,7 +2,7 @@
 
 const { parse } = require('babylon')
 const set = require('set-options')
-const code = require('print-code')
+const codeFrame = require('babel-code-frame')
 const resolve = require('resolve')
 
 const DEFAULT_BABYLON_OPTIONS = {
@@ -12,46 +12,26 @@ const DEFAULT_BABYLON_OPTIONS = {
 }
 
 
-// Print the code of the error slice
-exports.printCode = function (content, loc) {
-  var gen = code(content)
-    .highlight(loc.line)
-    .slice(Math.max(0, loc.line - 2), loc.line + 2)
-
-  if (typeof loc.column === 'number') {
-    gen.arrow_mark(loc.line, loc.column)
-  }
-
-  return gen.get()
-}
-
-
-exports.flavorAstError = (error, {filename, code}) => {
-  const loc = error.loc
-  const printed = exports.printCode(code, loc)
-  let message = `${error.message} while parsing "${filename}"
-
-${printed}
-`
-  let e = new SyntaxError(message)
-  e.loc = loc
-  throw e
-}
-
-
 // @public
-exports.astFromSource = (code, options = {}) => {
-  options = set(options, DEFAULT_BABYLON_OPTIONS)
+exports.astFromSource = (code, sourceFilename) => {
+  const options = set({
+    sourceFilename
+  }, DEFAULT_BABYLON_OPTIONS)
 
   let ast
 
   try {
     ast = parse(code, options)
   } catch (e) {
-    exports.flavorAstError(e, {
-      filename: options.filename,
-      code
-    })
+    const loc = error.loc
+    const printed = codeFrame(code, loc.line, loc.col)
+    let message = `${error.message} while parsing "${sourceFilename}"
+
+  ${printed}
+  `
+    let e = new SyntaxError(message)
+    e.loc = loc
+    throw e
   }
 
   return ast

@@ -4,9 +4,6 @@ let parser = exports
 const node_path = require('path')
 const util = require('util')
 const unique = require('make-unique')
-const {
-  printCode
-} = require('./utils')
 
 const set = require('set-options')
 

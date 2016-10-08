@@ -1,6 +1,6 @@
 {
   "name": "module-walker",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "JavaScript module traverser",
   "main": "./src",
   "scripts": {
@@ -44,12 +44,12 @@
   },
   "dependencies": {
     "async": "^2.0.0",
+    "babel-code-frame": "^6.16.0",
     "babylon": "^6.11.4",
     "make-array": "^1.0.1",
     "make-unique": "^1.0.4",
     "minimatch": "^3.0.3",
     "mix2": "^1.0.1",
-    "print-code": "^1.0.2",
     "resolve": "^1.1.7",
     "set-options": "^2.0.0"
   }
