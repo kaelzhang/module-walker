@@ -26,7 +26,6 @@ const DEFAULT_WALKER_OPTIONS = {
   extensions: EXTS_NODE,
   allowCyclic: true,
   allowAbsoluteDependency: true,
-  parse: astFromSource,
   resolve: resolve
 }
 
@@ -40,6 +39,7 @@ module.exports = class Walker extends EventEmitter {
     super()
 
     this.options = set(options, DEFAULT_WALKER_OPTIONS)
+    this.options.parse = this.options.parse || astFromSource
 
     this.nodes = {}
     this.callback = callback
