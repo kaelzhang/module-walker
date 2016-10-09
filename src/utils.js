@@ -22,13 +22,15 @@ exports.astFromSource = (code, sourceFilename) => {
 
   try {
     ast = parse(code, options)
-  } catch (e) {
+  } catch (error) {
     const loc = error.loc
-    const printed = codeFrame(code, loc.line, loc.col)
+    const printed = codeFrame(code, loc.line, loc.col, {
+      highlightCode: true
+    })
     let message = `${error.message} while parsing "${sourceFilename}"
 
-  ${printed}
-  `
+${printed}
+`
     let e = new SyntaxError(message)
     e.loc = loc
     throw e
